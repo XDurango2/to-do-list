@@ -10,7 +10,6 @@
   ========================================================= -->
   <v-row align="center" class="mb-6">
     <v-col>
-      <div class="header-subtitle mb-1">Organízate hoy</div>
       <div class="header-title">Mis Tareas</div>
 
       <!-- Email del usuario autenticado -->
@@ -96,7 +95,7 @@ async function hacerLogin() {
   try {
     // login() ya llama a /auth/verify internamente y devuelve
     // el objeto usuario completo: { id, email, apiKey, ... }
-    const usuario = await login('usuario@ejemplo.com')
+    const usuario = await login('usuario.test@ejemplo.com')
     emit('login-ok', { usuario })
   } catch (e) {
     mostrarError(e)
@@ -126,7 +125,7 @@ function mostrarError(e) {
 
 <style scoped>
 .header-title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Gill Sans', sans-serif;
   font-size: 2.6rem;
   font-weight: 700;
   color: var(--ink);
@@ -134,7 +133,7 @@ function mostrarError(e) {
   line-height: 1.1;
 }
 .header-subtitle {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Segoe UI', sans-serif;
   font-size: 0.85rem;
   color: #8a7e72;
   letter-spacing: 0.12em;

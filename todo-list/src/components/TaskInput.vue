@@ -96,7 +96,13 @@ function submit() {
 <style scoped>
 .cat-label {
   font-size: 0.72rem;
-  color: #8a7e72;
+  color: #181716;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.cat-label-text {
+  font-size: 0.72rem;
+  color: #181716;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -106,7 +112,8 @@ function submit() {
   border-radius: 50%;
   display: inline-block;
   margin-right: 5px;
-  flex-shrink: 0;
+  flex-shrink: 
+  0;
 }
 .input-field :deep(.v-field) {
   background: var(--beige) !important;

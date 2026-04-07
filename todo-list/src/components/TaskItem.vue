@@ -26,6 +26,9 @@
 
     <!-- Texto y categoría -->
     <div class="flex-grow-1 mt-1">
+     <div class="task-title" :class="{strikethrough: task.done}" >
+        {{ task.title }}
+     </div>
       <div class="task-text" :class="{ strikethrough: task.done }">
         {{ task.text }}
       </div>
@@ -75,12 +78,23 @@ const emit = defineEmits(['toggle', 'remove'])
 .task-item.done-item {
   opacity: 0.55;
 }
+.task-title {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.05rem;
+  color: #181717;
+  font-weight: 500;
+  line-height: 1.2;
+}
 .task-text {
   font-family: 'DM Sans', sans-serif;
   font-size: 0.97rem;
   color: #181717;
   font-weight: 400;
   line-height: 1.4;
+}
+.task-title.strikethrough {
+  text-decoration: line-through;
+  color: #181717;
 }
 .task-text.strikethrough {
   text-decoration: line-through;

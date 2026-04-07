@@ -41,7 +41,7 @@ const percent = computed(() =>
 
 <style scoped>
 .progress-label {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Gill Sans', sans-serif;
   font-size: 1.6rem;
   font-weight: 700;
   color: var(--rust);
