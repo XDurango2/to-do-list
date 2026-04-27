@@ -32,9 +32,12 @@
       <div class="task-text" :class="{ strikethrough: task.done }">
         {{ task.text }}
       </div>
-      <div class="d-flex align-center mt-1" style="gap: 6px;">
-        <span class="category-dot" :style="{ background: catColor }"></span>
-        <span class="cat-name">{{ catLabel }}</span>
+      <!-- DESPUÉS: múltiples categorías -->
+      <div class="d-flex flex-wrap align-center mt-1" style="gap: 6px;">
+        <template v-for="cat in taskCats" :key="cat.value">
+          <span class="category-dot" :style="{ background: cat.color }"></span>
+          <span class="cat-name mr-2">{{ cat.label }}</span>
+        </template>
       </div>
     </div>
 
@@ -54,13 +57,21 @@
 </template>
 
 <script setup>
-defineProps({
-  task:     { type: Object, required: true },
-  catColor: { type: String, default: '#ccc' },
-  catLabel: { type: String, default: '' },
-})
 
+// DESPUÉS
+import { computed } from 'vue'
+
+const props = defineProps({
+  task:       { type: Object, required: true },
+  categories: { type: Array,  default: () => [] },
+})
 const emit = defineEmits(['toggle', 'remove'])
+
+const taskCats = computed(() =>
+  (props.task.categorias ?? [])
+    .map(val => props.categories.find(c => c.value === val))
+    .filter(Boolean)
+)
 </script>
 
 <style scoped>

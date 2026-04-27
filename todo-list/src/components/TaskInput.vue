@@ -1,12 +1,4 @@
 <template>
-  <!-- =========================================================
-    TaskInput
-    Props:
-      - categories (Array) – lista de categorías disponibles
-    Emits:
-      - add-task ({ text, category }) – cuando el usuario agrega una tarea
-    Maneja el input de texto y el selector de categoría.
-  ========================================================= -->
   <v-card class="main-card pa-5 mb-5">
     <!-- Campo de título -->
     <v-row dense class="mb-1">
@@ -47,22 +39,32 @@
       </v-col>
     </v-row>
 
-    <!-- Selector de categoría -->
+    <!-- Selector de categorías (múltiple) -->
     <v-row class="mt-3" dense>
       <v-col>
-        <div class="cat-label mb-2">Categoría</div>
+        <div class="cat-label mb-2">
+          Categorías
+          <span v-if="selectedCats.length" class="cat-count">({{ selectedCats.length }})</span>
+        </div>
         <div class="d-flex flex-wrap" style="gap: 8px;">
           <v-chip
             v-for="cat in categories"
             :key="cat.value"
             class="filter-chip"
-            :class="{ 'active-chip': selectedCat === cat.value }"
+            :class="{ 'active-chip': selectedCats.includes(cat.value) }"
             size="small"
             variant="outlined"
-            @click="selectedCat = cat.value"
+            @click="toggleCat(cat.value)"
           >
             <span class="cat-dot" :style="{ background: cat.color }"></span>
             {{ cat.label }}
+            <v-icon
+              v-if="selectedCats.includes(cat.value)"
+              size="12"
+              class="ml-1"
+            >
+              mdi-check
+            </v-icon>
           </v-chip>
         </div>
       </v-col>
@@ -80,14 +82,30 @@ const props = defineProps({
 const emit = defineEmits(['add-task'])
 
 const newTitle    = ref('')
-const newText    = ref('')
-const selectedCat = ref(props.categories[0]?.value ?? '')
+const newText     = ref('')
+// Array en lugar de string para múltiple selección
+const selectedCats = ref(
+  props.categories[0]?.value ? [props.categories[0].value] : []
+)
+
+function toggleCat(value) {
+  const idx = selectedCats.value.indexOf(value)
+  if (idx === -1) {
+    selectedCats.value.push(value)
+  } else {
+    // Evita dejar la selección vacía (mínimo 1)
+    if (selectedCats.value.length > 1) {
+      selectedCats.value.splice(idx, 1)
+    }
+  }
+}
 
 function submit() {
   const title = newTitle.value.trim()
   const text  = newText.value.trim()
   if (!title || !text) return
-  emit('add-task', { title, text, category: selectedCat.value })
+  // Emite un array de categorías en lugar de una sola
+  emit('add-task', { title, text, categorias: [...selectedCats.value] })
   newTitle.value = ''
   newText.value  = ''
 }
@@ -148,6 +166,7 @@ function submit() {
 .filter-chip {
   border-radius: 20px !important;
   font-size: 0.75rem !important;
+  background-color: rgb(223, 210, 168) !important;
   font-family: 'DM Sans', sans-serif !important;
   font-weight: 500 !important;
   cursor: pointer;

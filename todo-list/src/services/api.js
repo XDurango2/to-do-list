@@ -7,8 +7,8 @@
 
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3003/api'
-const API_KEY      = import.meta.env.VITE_API_KEY  ?? 'mi_api_key_secreta_12345'
+const API_BASE_URL = 'http://localhost:3003/api'
+const API_KEY      = 'mi_api_key_secreta_12345'
 
 // ── Instancia base ────────────────────────────────────────────
 // withCredentials = true  →  el navegador envía/recibe cookies
@@ -42,29 +42,55 @@ cliente.interceptors.request.use((config) => {
  *   - Cookie normal:    csrf_token (también la guardamos en memoria)
  *   - Body JSON:        { csrfToken, usuario }
  */
-export async function login(email) {
-  const { data } = await cliente.post(
-    '/auth/login',
-    { email },
-    {
-      headers: {
-        'x-api-key': API_KEY,
-        'Content-Type': 'application/json',
-      },
-    }
-  )
+let googleInicializado = false
 
-  // Guardar el CSRF token en memoria — el interceptor lo usará
-  // automáticamente en todos los requests siguientes
-  csrfToken = data.csrfToken
+export function googleLogin(onSuccess, btnElement) {
+  if (!window.google?.accounts?.id) {
+    console.error('SDK de Google no cargado')
+    return
+  }
 
-  // El login solo devuelve { id, email } básico.
-  // Llamamos a /auth/verify para obtener los datos completos del usuario
-  // (apiKey, roles, etc.) ahora que ya tenemos el JWT en la cookie.
-  const { data: verifyData } = await cliente.get('/auth/verify')
-  return verifyData.usuario  // { id, email, apiKey, ... }
+  if (!googleInicializado) {
+    google.accounts.id.initialize({
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      callback: async (response) => {
+          console.log('✅ Google respondió:', response)
+        try {
+          const { data } = await cliente.post('/auth/login', {
+            credential: response.credential
+          },
+          {
+            headers: {
+              'x-api-key': API_KEY
+            }
+          })
+              console.log('✅ Backend respondió:', data)
+          csrfToken = data.csrfToken
+
+          const { data: verifyData } = await cliente.get('/auth/verify')
+              console.log('✅ Verify respondió:', verifyData)
+          onSuccess(verifyData.usuario)
+        } catch (err) {
+              console.error('❌ Error:', err.response?.data ?? err.message)
+          console.error('Error en login:', err)
+        }
+      }
+    })
+    googleInicializado = true
+  }
+
+  // Renderiza el botón oficial — funciona en Firefox, Safari, Chrome
+  if (btnElement) {
+    google.accounts.id.renderButton(btnElement, {
+      type: 'standard',
+      shape: 'rounded',
+      theme: 'outline',
+      text: 'signin_with',
+      size: 'large',
+      locale: 'es'
+    })
+  }
 }
-
 /**
  * Verifica si el usuario tiene sesión activa.
  * Usa la cookie jwt_token (enviada automáticamente) + CSRF header.
@@ -72,22 +98,30 @@ export async function login(email) {
  * tenga la cookie de una sesión previa.
  */
 export async function verificarSesion() {
-  // Si no tenemos csrfToken en memoria, intentar leerlo de la cookie
-  // (útil al recargar la página si el servidor la mantiene)
   if (!csrfToken) {
     csrfToken = leerCookieCSRF()
   }
 
-  const { data } = await cliente.get('/auth/verify')
-  return data  // { autenticado, usuario }
+  const { data } = await cliente.get('/auth/verify', {
+    withCredentials: true
+  })
+
+  return data
 }
 
 /**
  * Cierra la sesión y limpia el token CSRF en memoria.
  */
 export async function logout() {
-  await cliente.post('/auth/logout')
+  await cliente.post('/auth/logout', {}, {
+    withCredentials: true
+  })
+
   csrfToken = null
+
+  if (window.google?.accounts?.id) {
+    google.accounts.id.disableAutoSelect()
+  }
 }
 
 // ── Tareas ────────────────────────────────────────────────────
@@ -100,8 +134,8 @@ export async function obtenerTareas() {
   return data
 }
 
-export async function crearTarea(titulo, texto, categoria) {
-  const { data } = await cliente.post('/tareas', { titulo, texto, categoria })
+export async function crearTarea(titulo, texto, categorias) {
+  const { data } = await cliente.post('/tareas', { titulo, texto, categorias })
   return data
 }
 

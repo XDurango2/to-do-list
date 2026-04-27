@@ -37,8 +37,7 @@
           v-for="task in filteredTasks"
           :key="task.id"
           :task="task"
-          :cat-color="getCatColor(task.category)"
-          :cat-label="getCatLabel(task.category)"
+          :categories="props.categories"
           @toggle="emit('toggle', $event)"
           @remove="emit('remove', $event)"
         />
@@ -67,7 +66,6 @@
 <script setup>
 import { ref, computed } from 'vue'
 import TaskItem from './TaskItem.vue'
-import { getCatColor, getCatLabel } from '../pages/categories.js'
 
 const props = defineProps({
   tasks:      { type: Array, required: true },

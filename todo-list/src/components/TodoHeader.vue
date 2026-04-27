@@ -27,17 +27,11 @@
       </v-chip>
 
       <!-- Botón Login / Logout -->
-      <v-btn
-        v-if="!usuario"
-        variant="outlined"
-        size="x-small"
-        class="auth-btn login-btn"
-        :loading="cargando"
-        @click="hacerLogin"
-      >
-        <v-icon start size="14">mdi-login</v-icon>
-        Iniciar Sesión
-      </v-btn>
+      <!-- Reemplaza solo el v-btn de login -->
+        <div v-if="!usuario" class="google-btn-wrapper">
+          <div ref="googleBtnRef"></div>
+        </div>
+
 
       <v-btn
         v-else
@@ -65,8 +59,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { login, logout } from '../services/api.js'
+import { ref, computed,onMounted } from 'vue'
+import { googleLogin, logout } from '../services/api.js'
 
 // ── Props / Emits ─────────────────────────────────────────────
 const props = defineProps({
@@ -87,6 +81,20 @@ const todayLabel = computed(() =>
     month: 'short',
   })
 )
+const googleBtnRef = ref(null)
+
+onMounted(() => {
+  // Espera a que el SDK cargue
+  const intervalo = setInterval(() => {
+    if (window.google?.accounts?.id && googleBtnRef.value) {
+      clearInterval(intervalo)
+      googleLogin(
+        (usuario) => emit('login-ok', { usuario }),
+        googleBtnRef.value
+      )
+    }
+  }, 100)
+})
 
 // ── Acciones ──────────────────────────────────────────────────
 async function hacerLogin() {
@@ -95,7 +103,8 @@ async function hacerLogin() {
   try {
     // login() ya llama a /auth/verify internamente y devuelve
     // el objeto usuario completo: { id, email, apiKey, ... }
-    const usuario = await login('usuario.test@ejemplo.com')
+    
+    const usuario = await googleLogin()
     emit('login-ok', { usuario })
   } catch (e) {
     mostrarError(e)
@@ -167,5 +176,25 @@ function mostrarError(e) {
 .logout-btn {
   border-color: var(--sand) !important;
   color: #8a7e72 !important;
+}
+.google-btn-wrapper {
+  display: flex;
+  justify-content: flex-end;
+}
+.google-btn-hidden {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;        /* invisible */
+  overflow: hidden;  /* recorta el iframe de Google */
+}
+
+/* El iframe de Google debe cubrir todo el área */
+.google-btn-hidden > div,
+.google-btn-hidden iframe {
+  width: 100% !important;
+  height: 100% !important;
 }
 </style>

@@ -72,11 +72,14 @@ const doneCount = computed(() => tasks.value.filter(t => t.done).length)
 // los componentes esperan { id, text, done, category }.
 function normalizarTarea(t) {
   return {
-    id:       t._id ?? t.id,
-    title:    t.titulo ? t.titulo.split('\n')[0] : (t.title ?? 'Sin título'),
-    text:     t.texto ?? t.text,
-    done:     t.completada ?? t.done ?? false,
-    category: t.categoria ?? t.category ?? '',
+    id:         t._id ?? t.id,
+    title:      t.titulo ? t.titulo.split('\n')[0] : (t.title ?? 'Sin título'),
+    text:       t.texto ?? t.text,
+    done:       t.completada ?? t.done ?? false,
+    // Normaliza tanto si el servidor devuelve string como array
+    categorias: Array.isArray(t.categorias ?? t.categories)
+                  ? (t.categorias ?? t.categories)
+                  : [t.categoria ?? t.category ?? ''],
   }
 }
 
@@ -117,9 +120,9 @@ function onLogoutOk() {
 
 // ── Acciones — conectadas a la API ────────────────────────────
 
-async function addTask({ title, text, category }) {
+async function addTask({ title, text, categorias }) {
   try {
-    const nueva = await crearTarea(title, text, category) // ✅ Llama a la API
+    const nueva = await crearTarea(title, text, categorias) // ✅ Llama a la API
     tasks.value.unshift(normalizarTarea(nueva))
   } catch (e) {
     console.error('Error al crear tarea:', e)
