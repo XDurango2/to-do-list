@@ -3,10 +3,12 @@ import Vue from '@vitejs/plugin-vue'
 import Fonts from 'unplugin-fonts/vite'
 import { defineConfig } from 'vite'
 import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
+import mkcert from 'vite-plugin-mkcert'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
+    mkcert(),
     Vue({
       template: { transformAssetUrls },
     }),
@@ -46,5 +48,12 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    proxy: {      '/api': {
+        target: 'https://localhost:3003',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
+  
 })
