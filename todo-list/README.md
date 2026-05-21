@@ -1,81 +1,108 @@
-# Vuetify (Default)
+# To-Do List
 
-This is the official scaffolding tool for Vuetify, designed to give you a head start in building your new Vuetify application. It sets up a base template with all the necessary configurations and standard directory structure, enabling you to begin development without the hassle of setting up the project from scratch.
+A single-page task management app with Google OAuth authentication, category tagging, and a REST API backend.
 
-## ❗️ Important Links
+## Stack
 
-- 📄 [Docs](https://vuetifyjs.com/)
-- 🚨 [Issues](https://issues.vuetifyjs.com/)
-- 🏬 [Store](https://store.vuetifyjs.com/)
-- 🎮 [Playground](https://play.vuetifyjs.com/)
-- 💬 [Discord](https://community.vuetifyjs.com)
+- **Vue 3** (Composition API, `<script setup>`)
+- **Vuetify 4** — Material Design UI components
+- **Vite** — build tool with HMR
+- **Axios** — HTTP client with CSRF interceptor
+- **Vue Router** — SPA routing
 
-## 💿 Install
-
-Set up your project using your preferred package manager. Use the corresponding command to install the dependencies:
-
-| Package Manager                                                | Command        |
-|---------------------------------------------------------------|----------------|
-| [yarn](https://yarnpkg.com/getting-started)                   | `yarn install` |
-| [npm](https://docs.npmjs.com/cli/v7/commands/npm-install)     | `npm install`  |
-| [pnpm](https://pnpm.io/installation)                          | `pnpm install` |
-| [bun](https://bun.sh/#getting-started)                        | `bun install`  |
-
-After completing the installation, your environment is ready for Vuetify development.
-
-## ✨ Features
-
-- 🖼️ **Optimized Front-End Stack**: Leverage the latest Vue 3 and Vuetify 4 for a modern, reactive UI development experience. [Vue 3](https://v3.vuejs.org/) | [Vuetify 4](https://vuetifyjs.com/en/)
-- 🗃️ **State Management**: Integrated with [Pinia](https://pinia.vuejs.org/), the intuitive, modular state management solution for Vue.
-- 🚦 **Routing and Layouts**: Utilizes Vue Router for SPA navigation and vite-plugin-vue-layouts-next for organizing Vue file layouts. [Vue Router](https://router.vuejs.org/) | [vite-plugin-vue-layouts-next](https://github.com/loicduong/vite-plugin-vue-layouts-next)
-- 💻 **Enhanced Development Experience**: Benefit from TypeScript's static type checking and the ESLint plugin suite for Vue, ensuring code quality and consistency. [TypeScript](https://www.typescriptlang.org/) | [ESLint Plugin Vue](https://eslint.vuejs.org/)
-- ⚡ **Next-Gen Tooling**: Powered by Vite, experience fast cold starts and instant HMR (Hot Module Replacement). [Vite](https://vitejs.dev/)
-- 🧩 **Automated Component Importing**: Streamline your workflow with unplugin-vue-components, automatically importing components as you use them. [unplugin-vue-components](https://github.com/antfu/unplugin-vue-components)
-- 🛠️ **Strongly-Typed Vue**: Use vue-tsc for type-checking your Vue components, and enjoy a robust development experience. [vue-tsc](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc)
-
-These features are curated to provide a seamless development experience from setup to deployment, ensuring that your Vuetify application is both powerful and maintainable.
-
-## 💡 Usage
-
-This section covers how to start the development server and build your project for production.
-
-### Starting the Development Server
-
-To start the development server with hot-reload, run the following command. The server will be accessible at [http://localhost:3000](http://localhost:3000):
+## Getting started
 
 ```bash
-yarn dev
+npm install
+npm run dev      # dev server at http://localhost:3000
+npm run build    # production build → dist/
+npm run preview  # preview production build
 ```
 
-(Repeat for npm, pnpm, and bun with respective commands.)
+## Project structure
 
-> Add NODE_OPTIONS='--no-warnings' to suppress the JSON import warnings that happen as part of the Vuetify import mapping. If you are on Node [v21.3.0](https://nodejs.org/en/blog/release/v21.3.0) or higher, you can change this to NODE_OPTIONS='--disable-warning=5401'. If you don't mind the warning, you can remove this from your package.json dev script.
+```
+src/
+├── pages/
+│   ├── index.vue         # root component — global state, auth, CRUD
+│   ├── admin.vue         # admin panel
+│   └── categories.js     # category definitions + getCatColor/getCatLabel helpers
+├── components/
+│   ├── LoginScreen.vue   # Google OAuth login screen
+│   ├── TodoHeader.vue    # header, date display, login/logout button
+│   ├── ProgressCard.vue  # progress bar (completed/total)
+│   ├── TaskInput.vue     # form for creating tasks (title, description, categories)
+│   ├── TaskList.vue      # All/Pending/Done tabs + tag filter + animated list
+│   └── TaskItem.vue      # individual task row
+├── services/
+│   └── api.js            # centralized Axios client — auth + task CRUD
+├── router/index.ts
+└── plugins/
+    ├── index.ts
+    └── vuetify.ts
+```
 
-### Building for Production
+## Task model
 
-To build your project for production, use:
+```js
+// Frontend format
+{
+  id:         string,    // MongoDB _id
+  title:      string,
+  text:       string,
+  done:       boolean,
+  categorias: string[]   // values from CATEGORIES
+}
+
+// Server format (normalized in normalizarTarea())
+{ _id, titulo, texto, completada, categorias }
+```
+
+## Categories
+
+Defined in `src/pages/categories.js` (fixed — not fetched from the server).
+
+| value      | label    | color   |
+|------------|----------|---------|
+| `personal` | Personal | #C0533A |
+| `trabajo`  | Trabajo  | #C49A3C |
+| `salud`    | Salud    | #7A8C74 |
+| `hogar`    | Hogar    | #7A90B5 |
+
+## Authentication
+
+- Google OAuth (SDK `accounts.id`) → POST `/api/auth/login` with the Google credential
+- Server responds with HTTP-Only cookie `jwt_token` + regular cookie `csrf_token`
+- CSRF token is stored in memory and injected into every request via Axios interceptor
+- On page reload, `verificarSesion()` reads `csrf_token` from the cookie and calls `GET /api/auth/verify`
+
+## State management
+
+No Vuex/Pinia. Reactive state via `ref()` in `pages/index.vue`:
+
+```js
+const usuario = ref(null)   // authenticated user object or null
+const tasks   = ref([])     // array of normalized tasks
+```
+
+All task mutations go through `addTask`, `toggleTask`, `removeTask`, and `clearDone`, which call the API first and then update the local array.
+
+## Task list filters
+
+Two independent filters chained in the `filteredTasks` computed property:
+
+1. **Status tab** — `all` / `pending` / `done`
+2. **Selected tag** — `null` (all) or a category value (`personal`, `trabajo`, etc.)
+
+## E2E tests
 
 ```bash
-yarn build
+npm run test:e2e          # run Playwright tests (headless)
+npm run test:e2e:headed   # run with browser visible
+npm run test:e2e:ui       # open Playwright UI
+npm run test:e2e:report   # view last test report
 ```
 
-(Repeat for npm, pnpm, and bun with respective commands.)
+## License
 
-Once the build process is completed, your application will be ready for deployment in a production environment.
-
-## 💪 Support Vuetify Development
-
-This project is built with [Vuetify](https://vuetifyjs.com/en/), a UI Library with a comprehensive collection of Vue components. Vuetify is an MIT licensed Open Source project that has been made possible due to the generous contributions by our [sponsors and backers](https://vuetifyjs.com/introduction/sponsors-and-backers/). If you are interested in supporting this project, please consider:
-
-- [Requesting Enterprise Support](https://support.vuetifyjs.com/)
-- [Sponsoring John on Github](https://github.com/users/johnleider/sponsorship)
-- [Sponsoring Kael on Github](https://github.com/users/kaelwd/sponsorship)
-- [Supporting the team on Open Collective](https://opencollective.com/vuetify)
-- [Becoming a sponsor on Patreon](https://www.patreon.com/vuetify)
-- [Becoming a subscriber on Tidelift](https://tidelift.com/subscription/npm/vuetify)
-- [Making a one-time donation with Paypal](https://paypal.me/vuetify)
-
-## 📑 License
-[MIT](http://opensource.org/licenses/MIT)
-
-Copyright (c) 2016-present Vuetify, LLC
+MIT
