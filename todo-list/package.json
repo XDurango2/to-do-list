@@ -12,14 +12,17 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "mcp": "ruler apply",
-    "mcp:revert": "ruler revert"
+    "mcp:revert": "ruler revert",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@fontsource/roboto": "^5.2.9",
     "@mdi/font": "7.4.47",
     "axios": "^1.13.6",
     "axios-cookiejar-support": "^6.0.5",
-    "dotenv": "^17.4.2",
     "tough-cookie": "^6.0.1",
     "vue": "^3.5.26",
     "vue-router": "^4.6.4",
@@ -27,10 +30,12 @@
   },
   "devDependencies": {
     "@intellectronica/ruler": "^0.3.18",
+    "@playwright/test": "^1.60.0",
     "@tsconfig/node22": "^22.0.5",
     "@types/node": "^22.0.5",
     "@vitejs/plugin-vue": "^6.0.3",
     "@vue/tsconfig": "^0.8.1",
+    "dotenv": "^17.4.2",
     "eslint": "^9.39.2",
     "eslint-config-vuetify": "^4.3.4",
     "npm-run-all2": "^8.0.4",

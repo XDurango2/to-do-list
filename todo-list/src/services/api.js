@@ -110,6 +110,69 @@ export async function verificarSesion() {
 }
 
 /**
+ * Login con email y contraseña para usuarios regulares.
+ */
+export async function loginConEmail(email, password) {
+  const { data } = await cliente.post('/auth/login-local', { email, password }, {
+    headers: { 'x-api-key': API_KEY }
+  })
+  csrfToken = data.csrfToken
+  const { data: verifyData } = await cliente.get('/auth/verify')
+  return verifyData.usuario
+}
+
+/**
+ * Registro de nuevo usuario con email y contraseña.
+ */
+export async function registrarse(nombre, email, password) {
+  const { data } = await cliente.post('/auth/registro', { nombre, email, password }, {
+    headers: { 'x-api-key': API_KEY }
+  })
+  csrfToken = data.csrfToken
+  const { data: verifyData } = await cliente.get('/auth/verify')
+  return verifyData.usuario
+}
+
+/**
+ * Login con credenciales de administrador (email + contraseña).
+ * Requiere el endpoint POST /auth/admin-login en el servidor.
+ */
+export async function loginAdmin(email, password) {
+  const { data } = await cliente.post('/auth/admin-login', { email, password }, {
+    headers: { 'x-api-key': API_KEY }
+  })
+  csrfToken = data.csrfToken
+  const { data: verifyData } = await cliente.get('/auth/verify')
+  return { ...verifyData.usuario, role: 'admin' }
+}
+
+// ── Admin ─────────────────────────────────────────────────────
+// Endpoints requeridos en el servidor:
+//   GET    /api/admin/usuarios
+//   GET    /api/admin/usuarios/:id/tareas
+//   DELETE /api/admin/usuarios/:id
+
+export async function obtenerUsuarios() {
+  const { data } = await cliente.get('/admin/usuarios')
+  return data
+}
+
+export async function crearUsuario(nombre, email, password) {
+  const { data } = await cliente.post('/admin/usuarios', { nombre, email, password })
+  return data
+}
+
+export async function obtenerTareasDeUsuario(userId) {
+  const { data } = await cliente.get(`/admin/usuarios/${userId}/tareas`)
+  return data
+}
+
+export async function eliminarUsuario(userId) {
+  const { data } = await cliente.delete(`/admin/usuarios/${userId}`)
+  return data
+}
+
+/**
  * Cierra la sesión y limpia el token CSRF en memoria.
  */
 export async function logout() {

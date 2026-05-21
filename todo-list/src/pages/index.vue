@@ -11,12 +11,18 @@
               └── TaskItem (x N)
   ========================================================= -->
   <v-app>
-    <div class="page-bg pa-4 pa-md-8">
+    <!-- Pantalla de login cuando no hay sesión -->
+    <LoginScreen
+      v-if="!usuario"
+      @login-ok="onLoginOk"
+    />
+
+    <!-- App principal cuando el usuario está autenticado -->
+    <div v-else class="page-bg pa-4 pa-md-8">
       <v-container max-width="620">
 
         <TodoHeader
           :usuario="usuario"
-          @login-ok="onLoginOk"
           @logout-ok="onLogoutOk"
         />
 
@@ -54,6 +60,7 @@ import {
   eliminarTarea,   // ✅ AÑADIDO
 } from '../services/api.js'
 
+import LoginScreen  from '../components/LoginScreen.vue'
 import TodoHeader   from '../components/TodoHeader.vue'
 import ProgressCard from '../components/ProgressCard.vue'
 import TaskInput    from '../components/TaskInput.vue'

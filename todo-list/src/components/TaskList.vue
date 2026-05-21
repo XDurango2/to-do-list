@@ -18,6 +18,37 @@
       <v-tab value="done">Hechas</v-tab>
     </v-tabs>
 
+    <v-divider class="divider-ink mx-4" />
+
+    <!-- Filtro por tags -->
+    <div class="tag-filter px-4 py-2">
+      <v-chip
+        size="small"
+        class="tag-chip mr-1"
+        :class="{ 'tag-chip--active': selectedTag === null }"
+        variant="tonal"
+        @click="selectedTag = null"
+      >
+        Todas
+      </v-chip>
+      <v-chip
+        v-for="cat in props.categories"
+        :key="cat.value"
+        size="small"
+        class="tag-chip mr-1"
+        :class="{ 'tag-chip--active': selectedTag === cat.value }"
+        :style="selectedTag === cat.value ? `background:${cat.color}22; border-color:${cat.color};` : ''"
+        variant="tonal"
+        @click="selectedTag = selectedTag === cat.value ? null : cat.value"
+      >
+        <span
+          class="tag-dot mr-1"
+          :style="`background:${cat.color}`"
+        />
+        {{ cat.label }}
+      </v-chip>
+    </div>
+
     <v-divider class="divider-ink mx-4 mb-2" />
 
     <!-- Lista de tareas -->
@@ -74,12 +105,15 @@ const props = defineProps({
 
 const emit = defineEmits(['toggle', 'remove', 'clear-done'])
 
-const activeTab = ref('all')
+const activeTab  = ref('all')
+const selectedTag = ref(null)
 
 const filteredTasks = computed(() => {
-  if (activeTab.value === 'pending') return props.tasks.filter(t => !t.done)
-  if (activeTab.value === 'done')    return props.tasks.filter(t => t.done)
-  return props.tasks
+  let list = props.tasks
+  if (activeTab.value === 'pending') list = list.filter(t => !t.done)
+  if (activeTab.value === 'done')    list = list.filter(t => t.done)
+  if (selectedTag.value)             list = list.filter(t => t.categorias?.includes(selectedTag.value))
+  return list
 })
 
 const doneCount    = computed(() => props.tasks.filter(t => t.done).length)
@@ -125,6 +159,30 @@ const pendingCount = computed(() => props.tasks.filter(t => !t.done).length)
   color: var(--rust) !important;
   font-size: 0.75rem !important;
   font-family: 'DM Sans', sans-serif !important;
+}
+
+.tag-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.tag-chip {
+  font-family: 'DM Sans', sans-serif;
+  color: #815427;
+  font-size: 0.72rem !important;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: border-color 0.15s, background 0.15s;
+}
+.tag-chip--active {
+  font-weight: 600;
+}
+.tag-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 /* Animaciones de lista */
